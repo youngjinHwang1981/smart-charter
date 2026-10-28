@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users      User[]
+  drivers    Driver[]
+  vehicles   Vehicle[]
+  routes       Route[]
+  dispatches   Dispatch[]
+  routeMasters RouteMaster[]
+  pricingRules PricingRule[]
+}
+
+model User {
+  id        String  @id @default(uuid())
+  companyId String
+  email     String  @unique
+  name      String
+  role      String  @default("ADMIN")
+  password  String?
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model Driver {
+  id              String  @id @default(uuid())
+  companyId       String
+  name            String
+  employmentType  String
+  dependentsCount Int     @default(1)
+  
+  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignments     DispatchAssignment[]
+
+  @@index([companyId])
+  @@index([name])
+}
+
+enum CapacityType {
+  VAN_11
+  MINI_15
+  COMPACT_25
+  PREMIUM_28
+  LUXURY_31
+  STANDARD_45
+  LARGE_47
+  OTHER
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  DISPATCHED
+  IDLE
+  MAINTENANCE
+  INACTIVE
+}
+
+model Vehicle {
+  id                   String         @id @default(uuid())
+  companyId            String
+  plateNumber          String
+  capacity             Int
+  capacityType         CapacityType   @default(STANDARD_45)
+  modelName            String?
+  manufactureYear      Int?
+  amenities            Json?          @default("{}")
+  status               VehicleStatus  @default(AVAILABLE)
+  isMarketplaceVisible Boolean        @default(false)
+  dailyRentalPrice     Int?
+  insuranceExpiry      DateTime?
+  inspectionExpiry     DateTime?
+  lastMaintenanceDate  DateTime?
+  mileage              Int?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @default(now()) @updatedAt
+
+  company              Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignments          DispatchAssignment[]
+
+  @@unique([companyId, plateNumber])
+  @@index([companyId])
+  @@index([plateNumber])
+  @@index([capacityType])
+  @@index([status])
+  @@index([isMarketplaceVisible, status])
+}
+
+model Route {
+  id           String  @id @default(uuid())
+  companyId    String
+  name         String
+  clientName   String
+  billingPrice Int
+  payoutPrice  Int
+  
+  company      Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dispatches   Dispatch[]
+
+  @@index([companyId])
+  @@index([clientName])
+}
+
+model Dispatch {
+  id            String   @id @default(uuid())
+  companyId     String
+  routeId       String
+  routeMasterId String?
+  date          DateTime
+  type          String
+  routeType     String?  @default("FIXED_ROUTE") // CUSTOM_CHARTER | FIXED_ROUTE
+  
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  route         Route        @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeMaster   RouteMaster? @relation(fields: [routeMasterId], references: [id], onDelete: SetNull)
+  assignments   DispatchAssignment[]
+
+  @@index([companyId])
+  @@index([routeId])
+  @@index([routeMasterId])
+  @@index([date])
+  @@index([companyId, date])
+  @@index([routeId, date])
+}
+
+model DispatchAssignment {
+  id          String   @id @default(uuid())
+  dispatchId  String
+  driverId    String?
+  vehicleId   String?
+  status      String   @default("PENDING")
+  
+  dispatch    Dispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+  driver      Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  @@index([dispatchId])
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([status])
+}
+
+model RouteMaster {
+  id                String   @id @default(uuid())
+  companyId         String
+  name              String   // 노선명 (예: 서울-부산 정기 통근/투어)
+  departure         String   // 출발지
+  destination       String   // 도착지
+  estimatedDistance Float    // 예상 주행거리 (km)
+  defaultTollFee    Int      @default(0) // 기본 통행료 (원)
+  isActive          Boolean  @default(true) // 사용 여부
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+
+  company           Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dispatches        Dispatch[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@index([departure, destination])
+}
+
+model PricingRule {
+  id                 String       @id @default(uuid())
+  companyId          String
+  startDate          DateTime     // 적용 시작일
+  capacityType       CapacityType // 차종/인승 등급 Enum 참조
+  baseRate           Int          // 기본 운임/단가 (원)
+  extraFuelCostPerKm Int          @default(0) // km당 추가 유류비 (원)
+  weekendSurgeRate   Float        @default(1.0) // 주말 할증 비율 (예: 1.2 = 20% 할증)
+  isActive           Boolean      @default(true) // 활성화 여부
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @default(now()) @updatedAt
+
+  company            Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([capacityType])
+  @@index([startDate])
+  @@index([isActive])
+}

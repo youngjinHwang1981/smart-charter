@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ===== 배차 스케줄러 FullCalendar 카드 스타일 ===== */
+.schedule-calendar .fc-daygrid-event {
+  white-space: normal;
+  border-radius: 0.6rem;
+  margin: 3px 4px 0 !important;
+  overflow: hidden;
+}
+.schedule-calendar .fc-event {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.schedule-calendar .fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -6px rgb(15 23 42 / 0.45);
+  filter: brightness(1.06);
+}
+.schedule-calendar .fc-daygrid-day-frame {
+  min-height: 7rem;
+}
+.schedule-calendar .fc-day-today {
+  background: rgb(238 242 255 / 0.6) !important;
+}
+.schedule-calendar .fc-daygrid-more-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4f46e5;
+  margin-left: 6px;
+}
