@@ -96,8 +96,24 @@ export default async function DriverPortalPage({
         vehicle: { select: { plateNumber: true } },
         dispatch: {
           select: {
+            id: true,
             date: true,
             type: true,
+            routeType: true,
+            status: true,
+            actualDistance: true,
+            actualTollFee: true,
+            receiptImageUrl: true,
+            routeMaster: {
+              select: {
+                id: true,
+                name: true,
+                departure: true,
+                destination: true,
+                estimatedDistance: true,
+                defaultTollFee: true,
+              },
+            },
             route: {
               select: {
                 name: true,
@@ -172,18 +188,32 @@ export default async function DriverPortalPage({
       .filter(Boolean) as string[];
     const coDriver = otherDrivers.length > 0 ? otherDrivers.join(", ") : null;
 
+    const isCustomCharter =
+      a.dispatch?.routeType === "CUSTOM_CHARTER" ||
+      (!a.dispatch?.routeMasterId && a.dispatch?.type !== "FIXED");
+    const resolvedRouteType: "FIXED_ROUTE" | "CUSTOM_CHARTER" = isCustomCharter
+      ? "CUSTOM_CHARTER"
+      : "FIXED_ROUTE";
+
     return {
       id: a.id,
+      dispatchId: a.dispatch.id,
       date: dateStr,
       dayOfWeek,
       time: departureTime,
-      routeName,
+      routeName: a.dispatch?.routeMaster?.name || routeName,
       clientName: a.dispatch?.route?.clientName || "일반",
       plateNumber: a.vehicle?.plateNumber || "미배정",
       coDriver,
-      type: (a.dispatch?.type === "FIXED" ? "FIXED" : "NORMAL") as "FIXED" | "NORMAL",
+      type: (resolvedRouteType === "FIXED_ROUTE" ? "FIXED" : "NORMAL") as "FIXED" | "NORMAL",
+      routeType: resolvedRouteType,
       payoutPrice: a.dispatch?.route?.payoutPrice || 0,
-      status: a.status,
+      status: a.dispatch?.status !== "PENDING" ? a.dispatch.status : a.status,
+      estimatedDistance: a.dispatch?.routeMaster?.estimatedDistance ?? null,
+      defaultTollFee: a.dispatch?.routeMaster?.defaultTollFee ?? null,
+      actualDistance: a.dispatch?.actualDistance ?? null,
+      actualTollFee: a.dispatch?.actualTollFee ?? null,
+      receiptImageUrl: a.dispatch?.receiptImageUrl ?? null,
       isToday: dateStr === todayString,
     };
   });

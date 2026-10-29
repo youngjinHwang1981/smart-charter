@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -69,14 +70,21 @@ function LoginForm() {
       <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-10 transition-all">
         {/* 시스템 로고 및 환영 인사 */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-3xl text-white shadow-lg shadow-blue-500/30">
-            🚌
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/images/sf_mobility_logo.png"
+              alt="SF Mobility 공식 로고"
+              width={180}
+              height={72}
+              preload
+              className="h-16 w-auto object-contain rounded-xl"
+            />
           </div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-            스마트투어 ERP
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            SF Mobility
           </h1>
           <p className="text-sm text-gray-500 mt-1.5 font-medium">
-            전세버스 통합 운영 관리 시스템 로그인
+            B2B 통합 모빌리티 플랫폼 로그인
           </p>
         </div>
 

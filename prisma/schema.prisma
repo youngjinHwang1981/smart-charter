@@ -120,7 +120,12 @@ model Dispatch {
   routeMasterId String?
   date          DateTime
   type          String
-  routeType     String?  @default("FIXED_ROUTE") // CUSTOM_CHARTER | FIXED_ROUTE
+  routeType       String?  @default("FIXED_ROUTE") // CUSTOM_CHARTER | FIXED_ROUTE
+  status          String   @default("PENDING") // PENDING | COMPLETED | PENDING_SETTLEMENT
+  actualDistance  Float?   // 실제 주행거리 (km)
+  actualTollFee   Int?     // 실제 통행료 (원)
+  parkingFee      Int?     @default(0) // 주차비 등 기타 실비 (원)
+  receiptImageUrl String?  // 영수증 사진 URL (Supabase Storage 등)
   
   company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   route         Route        @relation(fields: [routeId], references: [id], onDelete: Cascade)

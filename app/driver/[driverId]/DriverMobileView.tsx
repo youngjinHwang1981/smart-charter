@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import DriverActionForm from "./DriverActionForm";
 
 export interface SerializedDriverInfo {
   id: string;
@@ -12,6 +13,7 @@ export interface SerializedDriverInfo {
 
 export interface SerializedScheduleItem {
   id: string;
+  dispatchId: string;
   date: string; // YYYY-MM-DD
   dayOfWeek: string; // 월, 화, 수...
   time: string; // "06:30" 등
@@ -20,8 +22,14 @@ export interface SerializedScheduleItem {
   plateNumber: string;
   coDriver: string | null; // 동승 기사 (교대 시)
   type: "FIXED" | "NORMAL";
+  routeType: "FIXED_ROUTE" | "CUSTOM_CHARTER";
   payoutPrice: number;
   status: string;
+  estimatedDistance?: number | null;
+  defaultTollFee?: number | null;
+  actualDistance?: number | null;
+  actualTollFee?: number | null;
+  receiptImageUrl?: string | null;
   isToday: boolean;
 }
 
@@ -310,6 +318,18 @@ export default function DriverMobileView({
                           </span>
                         </div>
                       </div>
+
+                      {/* 투 트랙 운행 종료 및 자동/수동 정산 제어 폼 */}
+                      <DriverActionForm
+                        dispatchId={item.dispatchId}
+                        routeType={item.routeType}
+                        status={item.status}
+                        estimatedDistance={item.estimatedDistance}
+                        defaultTollFee={item.defaultTollFee}
+                        actualDistance={item.actualDistance}
+                        actualTollFee={item.actualTollFee}
+                        receiptImageUrl={item.receiptImageUrl}
+                      />
                     </article>
                   ))
                 ) : (
@@ -397,6 +417,18 @@ export default function DriverMobileView({
                             </span>
                           </div>
                         </div>
+
+                        {/* 투 트랙 운행 종료 및 정산 제어 폼 */}
+                        <DriverActionForm
+                          dispatchId={item.dispatchId}
+                          routeType={item.routeType}
+                          status={item.status}
+                          estimatedDistance={item.estimatedDistance}
+                          defaultTollFee={item.defaultTollFee}
+                          actualDistance={item.actualDistance}
+                          actualTollFee={item.actualTollFee}
+                          receiptImageUrl={item.receiptImageUrl}
+                        />
                       </article>
                     ))}
                   </div>

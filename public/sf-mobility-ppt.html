@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SF Mobility | B2B 전세버스 통합 관제 ERP 마스터 플랜</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: #050B16;
+      color: #F8FAFC;
+      overflow: hidden;
+      user-select: none;
+    }
+    .slide {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      padding: 3.2rem 5rem 5.2rem 5rem;
+      box-sizing: border-box;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media print {
+      body { overflow: visible; background: #0A1931; }
+      .slide {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: space-between;
+        page-break-after: always;
+        height: 100vh;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="relative">
+
+  <!-- 상단 고정 컨트롤 바 -->
+  <div class="no-print fixed top-4 right-6 z-50 flex items-center gap-2">
+    <button onclick="toggleNotes()" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition cursor-pointer">
+      💬 발표 대본 (N)
+    </button>
+    <button onclick="window.print()" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition cursor-pointer">
+      🖨️ PDF 저장
+    </button>
+    <button onclick="toggleFullScreen()" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition cursor-pointer">
+      ⛶ 전체화면 (F)
+    </button>
+  </div>
+
+  <!-- ================= SLIDE 1: 표지 ================= -->
+  <section class="slide active bg-gradient-to-br from-[#061021] via-[#0A1931] to-[#08203E]" data-note="아버지, 오늘 보여드릴 'SF Mobility'는 첫째로 우리 회사의 배차·영수증 정산·급여 업무를 자동화하기 위해 이미 개발을 마친 시스템이고, 둘째로는 우리 회사에서 검증한 뒤 전국 전세버스 회사들에 월 구독료와 차량 중개 수수료를 받고 확장할 수 있는 미래 B2B 플랫폼입니다.">
+    <div class="flex items-center justify-between">
+      <span class="px-3.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-bold tracking-widest uppercase">
+        B2B Intelligent Mobility ERP & SaaS Platform
+      </span>
+      <span class="text-slate-400 text-sm font-medium">2026. 10</span>
+    </div>
+
+    <div class="my-auto max-w-4xl space-y-6">
+      <div class="inline-flex items-center gap-4 bg-white px-6 py-4 rounded-2xl shadow-2xl">
+        <img src="/images/sf_mobility_logo.png" alt="SF Mobility" class="h-16 w-auto object-contain" onerror="this.style.display='none'" />
+        <div>
+          <div class="text-2xl font-black text-[#0A1931] tracking-tight leading-none">SF Mobility</div>
+          <div class="text-xs font-bold text-slate-400 mt-1">에스에프모빌리티</div>
+        </div>
+      </div>
+
+      <h1 class="text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white">
+        전세버스 통합 관제 및<br />
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">투 트랙 자동 정산 ERP 플랫폼</span>
+      </h1>
+
+      <p class="text-xl text-slate-300 font-medium leading-relaxed max-w-3xl">
+        내부 운영 자동화(배차·영수증 증빙·3.3% 급여)의 완벽한 현장 안착부터,<br />
+        <strong>웹 LBS 실시간 차량 관제 · B2B SaaS 구독 · 유휴 차량 공유 마켓플레이스</strong>까지의 마스터 플랜
+      </p>
+    </div>
+
+    <div class="flex items-center justify-between pt-6 border-t border-slate-800/80 text-sm text-slate-400">
+      <div>발표자: <strong class="text-white">황영진</strong></div>
+      <div>방향키(← →) 또는 스페이스바로 슬라이드 이동</div>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 2: 문제 제기 ================= -->
+  <section class="slide bg-[#081223]" data-note="지금까지 사무실에서 겪던 가장 큰 고충 4가지입니다. 엑셀 오타, 일일이 전화로 배차 확인하기, 종이 영수증 모으기, 월말마다 3.3% 급여 계산하기입니다. 이걸 컴퓨터와 스마트폰이 알아서 하게 바꿨습니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">01. Problem & Background</span>
+      <h2 class="text-4xl font-black text-white mt-2">기존 전세버스 운영·정산의 4가지 고충</h2>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6 my-auto">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-7 space-y-3">
+        <div class="w-11 h-11 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl font-bold">01</div>
+        <h3 class="text-2xl font-bold text-white">방대한 엑셀 수기 입력과 오타 위험</h3>
+        <p class="text-slate-300 text-base leading-relaxed">
+          수십 개 노선과 날짜별 배차를 엑셀 표에 수기로 입력하다 보니, 오타 한 번에 거래처 청구액과 기사 지급액이 틀어지는 문제가 발생합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-7 space-y-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-bold">02</div>
+        <h3 class="text-2xl font-bold text-white">카톡·전화 중심의 번거로운 배차 및 도착 확인</h3>
+        <p class="text-slate-300 text-base leading-relaxed">
+          배차 전달은 물론 차량이 출발했는지, 목적지에 도착했는지 확인하기 위해 하루에도 수십 통의 확인 전화를 돌려야 합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-7 space-y-3">
+        <div class="w-11 h-11 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center text-xl font-bold">03</div>
+        <h3 class="text-2xl font-bold text-white">종이 영수증 수거 및 수동 대조 병목</h3>
+        <p class="text-slate-300 text-base leading-relaxed">
+          일반 대절 운행 후 톨게이트비·주차비 실물 영수증을 직접 모아서 대조해야 하므로 영수증 분실 및 정산 지연이 빈번합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-7 space-y-3">
+        <div class="w-11 h-11 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl font-bold">04</div>
+        <h3 class="text-2xl font-bold text-white">월말 정산·급여 계산 과부하 & 유휴 차량 손실</h3>
+        <p class="text-slate-300 text-base leading-relaxed">
+          발주처 청구서와 기사별 3.3% 급여 계산에 매달 막대한 시간이 들고, 비수기나 평일 빈 차(유휴 차량)를 타사와 연결할 시스템이 없습니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-sm text-slate-400 border-t border-slate-800 pt-4">
+      SF Mobility ERP — 현장 업무의 비효율을 시스템으로 완전 자동화
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 3: 기개발 완료 핵심 모듈 (Current MVP) ================= -->
+  <section class="slide bg-[#081223]" data-note="여기 적힌 4가지 핵심 모듈은 앞으로 만들 계획이 아니라 이미 100% 개발이 완료되어 오늘 바로 시연해 드릴 수 있는 기능들입니다. 배차부터 기사 모바일 영수증 전송, 사무실 승인, 3.3% 급여 엑셀 출력까지 전부 작동합니다.">
+    <div class="flex items-center justify-between">
+      <div>
+        <span class="text-emerald-400 font-extrabold text-sm tracking-widest uppercase">02. Completed Core System (100% 구현 완료)</span>
+        <h2 class="text-4xl font-black text-white mt-2">현재 구축 완료된 4대 핵심 시스템 현황</h2>
+      </div>
+      <span class="px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold">
+        ✅ 실서버 배포 및 DB 연동 완료
+      </span>
+    </div>
+
+    <div class="grid grid-cols-4 gap-5 my-auto">
+      <div class="bg-gradient-to-b from-blue-950/80 to-slate-900 border border-blue-500/40 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300">✅ 개발 완료</span>
+          <h3 class="text-xl font-extrabold text-white mt-4">노선 마스터 &<br/>차량 제원 DB</h3>
+          <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+            고정 노선(거리·기본 톨비) 마스터 및 차량 상세 제원(45인승/28인승 우등, 연식, 옵션, 타사 공유 노출 설정) 구축 완료
+          </p>
+        </div>
+        <div class="mt-4 text-xs font-bold text-blue-300">/admin/vehicles · /route</div>
+      </div>
+
+      <div class="bg-gradient-to-b from-indigo-950/80 to-slate-900 border border-indigo-500/40 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300">✅ 개발 완료</span>
+          <h3 class="text-xl font-extrabold text-white mt-4">무설치 기사 전용<br/>모바일 웹포털</h3>
+          <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+            고유 링크 터치 한 번으로 '오늘의 배차', 탑승 차량, 당월 누적 운행 횟수 및 3.3% 공제 후 실지급액 실시간 확인
+          </p>
+        </div>
+        <div class="mt-4 text-xs font-bold text-indigo-300">/driver/[기사UUID]</div>
+      </div>
+
+      <div class="bg-gradient-to-b from-cyan-950/80 to-slate-900 border border-cyan-500/40 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300">✅ 개발 완료</span>
+          <h3 class="text-xl font-extrabold text-white mt-4">투 트랙 운행 종료 &<br/>영수증 사진 승인</h3>
+          <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+            고정 노선 원클릭 자동 정산 + 일반 대절 영수증 사진 촬영 전송 ➔ 관리자 알림 배지 및 사진 확대 검토 후 승인
+          </p>
+        </div>
+        <div class="mt-4 text-xs font-bold text-cyan-300">/admin/settlements</div>
+      </div>
+
+      <div class="bg-gradient-to-b from-emerald-950/80 to-slate-900 border border-emerald-500/40 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300">✅ 개발 완료</span>
+          <h3 class="text-xl font-extrabold text-white mt-4">경영 손익 대시보드 &<br/>3.3% 급여 엑셀 출력</h3>
+          <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+            최근 30일 매출·원가·마진율 그래프 시각화 및 거래처 정산서 / 기사 급여대장 엑셀(.xlsx) 원클릭 다운로드
+          </p>
+        </div>
+        <div class="mt-4 text-xs font-bold text-emerald-300">/ · /settlement · /payroll</div>
+      </div>
+    </div>
+
+    <div class="text-sm text-slate-400 border-t border-slate-800 pt-4">
+      코어 ERP + 기사-사무 양방향 데이터 연동 + 마켓플레이스용 차량 스펙 DB까지 이미 1차 구축 완료
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 4: 투 트랙 정산 엔진 ================= -->
+  <section class="slide bg-[#081223]" data-note="전세버스 업무 특성상 매일 똑같이 도는 '고정 노선'과 그때그때 코스가 바뀌는 '일반 대절'이 다르다는 점을 정확히 반영했습니다. 고정 노선은 녹색 버튼 하나로 끝나고, 일반 대절은 계기판 거리와 영수증 사진을 찍어 사무실로 전송합니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">03. Two-Track Settlement Engine (구현 완료)</span>
+      <h2 class="text-4xl font-black text-white mt-2">핵심 차별점: 투 트랙(Two-Track) 양방향 자동 정산</h2>
+    </div>
+
+    <div class="grid grid-cols-2 gap-8 my-auto">
+      <div class="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl p-8 space-y-5">
+        <div class="flex items-center justify-between">
+          <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-extrabold">
+            TRACK 1 · 고정 노선 (FIXED_ROUTE)
+          </span>
+          <span class="text-emerald-400 font-bold text-sm">통근 · 통학 · 정기 노선</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">원클릭 100% 자동 정산</h3>
+        <ul class="space-y-3 text-slate-300 text-base">
+          <li class="flex items-start gap-2.5">
+            <span class="text-emerald-400 font-bold">✔</span>
+            <span>노선 마스터에 등록된 <strong>예상 주행거리(km)</strong>와 <strong>기본 통행료(원)</strong> 자동 매칭</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-emerald-400 font-bold">✔</span>
+            <span>기사님은 운행 종료 후 녹색 <strong>[운행 종료 및 자동 정산]</strong> 버튼 1번만 터치</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-emerald-400 font-bold">✔</span>
+            <span>관리자 추가 검토 없이 즉시 <strong>정산 완료(COMPLETED)</strong> 처리 (사무실 병목 제로)</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-slate-900 border-2 border-blue-500/50 rounded-3xl p-8 space-y-5">
+        <div class="flex items-center justify-between">
+          <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 text-xs font-extrabold">
+            TRACK 2 · 일반 대절 (CUSTOM_CHARTER)
+          </span>
+          <span class="text-blue-400 font-bold text-sm">관광 · 행사 · 수동 배차</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">영수증 사진 촬영 업로드 & 관리자 실시간 승인</h3>
+        <ul class="space-y-3 text-slate-300 text-base">
+          <li class="flex items-start gap-2.5">
+            <span class="text-blue-400 font-bold">✔</span>
+            <span>기사님이 모바일에서 <strong>실제 주행거리(km)</strong> 및 <strong>영수증/계기판 사진</strong> 촬영 첨부</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-blue-400 font-bold">✔</span>
+            <span>전송 즉시 관리자 대시보드 및 정산 메뉴에 <strong>빨간색 미승인 건수 배지(Badge)</strong> 점등</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-blue-400 font-bold">✔</span>
+            <span>사무실에서 영수증 사진을 전체화면 확대 확인 후 톨비·주차비 입력 및 <strong>최종 승인</strong></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="text-sm text-slate-400 border-t border-slate-800 pt-4">
+      정기 노선의 신속함과 일반 대절의 꼼꼼한 실비 검증을 동시에 만족하는 맞춤형 설계
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 5: 고연령층 기사님 3단계 점진적 스며들기 전략 ================= -->
+  <section class="slide bg-[#081223]" data-note="아무리 좋은 프로그램도 연세 있으신 기사님들이 어렵다고 안 쓰시면 실패합니다. 그래서 앱 설치나 로그인을 아예 없앴고, 1단계 버튼 클릭과 2단계 사진 촬영 전송까지 이미 완성했습니다. 다음엔 3단계 카카오 알림톡 자동 발송만 붙이면 100% 안착됩니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">04. Driver Adoption Strategy</span>
+      <h2 class="text-4xl font-black text-white mt-2">고연령층 기사님 맞춤 '점진적 스며들기' 3단계 전략</h2>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6 my-auto">
+      <div class="bg-slate-900 border-2 border-emerald-500/40 rounded-2xl p-7 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300">1단계 · Read & Click</span>
+          <span class="text-xs font-bold text-emerald-400">✅ 구축 완료</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">단방향 확인 &<br/>대형 버튼 원클릭</h3>
+        <p class="text-slate-300 text-sm leading-relaxed">
+          복잡한 앱 설치나 로그인 없이 링크만 누르면 오늘 배차 정보가 뜨고, 큼직한 <strong>[운행 종료]</strong> 버튼 하나만 누르면 끝납니다. 사무실의 배차 확인 전화 업무가 대폭 감소합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border-2 border-blue-500/40 rounded-2xl p-7 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-blue-500/20 text-blue-300">2단계 · Camera Proof</span>
+          <span class="text-xs font-bold text-blue-400">✅ 구축 완료 (+고도화)</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">스마트폰 카메라<br/>영수증·계기판 촬영</h3>
+        <p class="text-slate-300 text-sm leading-relaxed">
+          복잡한 비용 계산 없이 계기판과 영수증 사진만 찍어서 전송하면, 이미지 자동 압축을 거쳐 사무실 모니터에 크게 띄워주고 직원이 실비를 정확히 입력·승인합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-7 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300">3단계 · Zero-UI</span>
+          <span class="text-xs font-bold text-amber-400">🔜 단기 확장 과제</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">카카오 알림톡<br/>자동 발송 연동</h3>
+        <p class="text-slate-300 text-sm leading-relaxed">
+          알리고/비즈뿌리오 API를 연동하여 신규 배차 할당, 익일 운행 일정, 월간 정산 확정 시 <strong>카카오 알림톡</strong>과 모바일 웹 접속 버튼을 자동으로 발송합니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-sm text-slate-400 border-t border-slate-800 pt-4">
+      핵심 인사이트: 기사님들의 조작 스트레스를 없애고 가장 익숙한 방식(카톡·사진 촬영·버튼 터치)으로 유도
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 6: 중장기 확장 과제 1 (사무 간소화 & RBAC) ================= -->
+  <section class="slide bg-[#081223]" data-note="현재 완성된 배차·정산 기능 위에 다음 단계로 붙일 사무 자동화 기능입니다. 전자 견적서 발급, 거래처 미수금 관리, 법정 운행일지 추출을 추가하고, 직원별로 볼 수 있는 권한을 분리해 회사 매출 보안을 지킵니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">05. Office Automation & Security Roadmap</span>
+      <h2 class="text-4xl font-black text-white mt-2">단기·중기 확장 과제 ① 사무 자동화 및 RBAC 권한 통제</h2>
+    </div>
+
+    <div class="grid grid-cols-2 gap-7 my-auto">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-4">
+        <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-extrabold">
+          OFFICE AUTOMATION · 사무 업무 간소화
+        </span>
+        <h3 class="text-2xl font-black text-white">견적부터 미수금·법정일지까지 완전 자동화</h3>
+        <ul class="space-y-3 text-slate-300 text-base">
+          <li class="flex items-start gap-2.5">
+            <span class="text-indigo-400 font-bold">•</span>
+            <span><strong>전자 견적서 / 배차확인서 자동 생성</strong>: 배차 데이터 기반으로 거래처 발송용 표준 문서 원클릭 발행</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-indigo-400 font-bold">•</span>
+            <span><strong>거래처 미수금(AR) 대시보드</strong>: 세금계산서 발행 여부 및 미입금 거래처 자동 추적·알림</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-indigo-400 font-bold">•</span>
+            <span><strong>법정 운행일지 자동 추출 & 차량 라이프사이클</strong>: 관공서 제출용 운행일지 추출 및 정비·보험 만기 통합 알림</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-4">
+        <span class="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-extrabold">
+          RBAC SECURITY · 계층별 권한 분리
+        </span>
+        <h3 class="text-2xl font-black text-white">직책별 메뉴 노출 및 데이터 보안 통제</h3>
+        <ul class="space-y-3 text-slate-300 text-base">
+          <li class="flex items-start gap-2.5">
+            <span class="text-rose-400 font-bold">•</span>
+            <span><strong>총괄 관리자 (ADMIN / 대표)</strong>: 전체 경영 손익 대시보드, 마진율, 급여 및 모든 마스터 데이터 열람·승인</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-rose-400 font-bold">•</span>
+            <span><strong>재무 / 배차 실무자 (FINANCE / STAFF)</strong>: 일일 배차 스케줄링, 영수증 실비 검수, 거래처 정산서 작성 전담</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-rose-400 font-bold">•</span>
+            <span><strong>운행 기사 (DRIVER)</strong>: 본인 배차 타임라인, 운행 종료 보고 및 본인 급여 명세만 안전하게 접근</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="text-sm text-slate-400 border-t border-slate-800 pt-4">
+      B2B SaaS Pro 요금제의 핵심 고부가가치 모듈로 작동
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 7: 중장기 확장 과제 2 (웹 LBS 실시간 차량 관제 & 지오펜스) ================= -->
+  <section class="slide bg-[#081223]" data-note="앞으로 추가할 가장 강력한 기술 무기입니다. 비싼 차량용 GPS 기기를 따로 달지 않아도, 기사님이 켜두신 모바일 웹 화면을 통해 버스가 지금 어디쯤 가고 있는지 지도에 실시간으로 뜹니다. 공항이나 골프장, 학교에 도착하면 자동으로 기록되어 전화 확인이 필요 없습니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">06. Real-Time LBS & Geofencing</span>
+      <h2 class="text-4xl font-black text-white mt-2">중장기 확장 과제 ② 지오펜스 및 웹 LBS 실시간 차량 관제</h2>
+    </div>
+
+    <div class="grid grid-cols-4 gap-5 my-auto">
+      <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 space-y-3">
+        <div class="text-3xl">🛰️</div>
+        <h3 class="text-xl font-extrabold text-white">무설치 웹 LBS 좌표 수집</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          별도 하드웨어 단말기 없이 기사용 모바일(UUID) 링크의 HTML5 Geolocation으로 실시간 위치 좌표를 전송하고 튀는 좌표(노이즈)를 필터링합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 space-y-3">
+        <div class="text-3xl">🗺️</div>
+        <h3 class="text-xl font-extrabold text-white">통합 라이브 맵 (Live Map)</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          운행 중인 전체 전세버스의 실시간 위치와 운행 상태(이동 중/대기 중/운행 완료)를 관리자 상황판 지도에 한눈에 렌더링합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 space-y-3">
+        <div class="text-3xl">📍</div>
+        <h3 class="text-xl font-extrabold text-white">거점 지오펜스 자동 감지</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          공항, 골프장, 학교, 기업체 주변에 지오펜스(가상 반경)를 설정해 <strong>차량 진입·출발 로그를 자동 기록</strong>하여 도착 확인 전화를 없앱니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 space-y-3">
+        <div class="text-3xl">⏪</div>
+        <h3 class="text-xl font-extrabold text-white">운행 궤적 (Trajectory) 재생</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          지연이나 경로 이탈 등 운행 관련 클레임 발생 시 해당 일자의 GPS 수신 궤적을 시간대별로 재생하여 객관적 증빙 자료로 활용합니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-sm text-slate-400 border-t border-slate-800 pt-4">
+      타사 ERP가 쉽게 모방할 수 없는 SF Mobility만의 독보적 기술 경쟁력 (Enterprise 킬러 기능)
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 8: B2B SaaS 요금제 & GTM 시장 진입 전략 ================= -->
+  <section class="slide bg-[#081223]" data-note="우리 회사에서 먼저 완벽히 검증한 뒤, 전국 전세버스 운수업체에 파는 B2B 사업 모델입니다. 규모에 따라 월 5만 원부터 50만 원까지 3단계 요금제로 나누고, 기존 엑셀 데이터를 무료로 옮겨주는 전략으로 시장을 공략합니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">07. B2B SaaS Business Model & GTM</span>
+      <h2 class="text-4xl font-black text-white mt-2">3단계 구독 요금제 및 시장 진입(Go-To-Market) 전략</h2>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6 my-auto">
+      <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-extrabold text-slate-300">BASIC 티어</span>
+            <span class="text-lg font-black text-white">월 5~9만 원</span>
+          </div>
+          <h3 class="text-xl font-bold text-white mt-2">엑셀 수작업 탈출 코어팩</h3>
+          <ul class="mt-4 space-y-2 text-xs text-slate-300">
+            <li>• 일일 배차 스케줄러 & 노선 마스터</li>
+            <li>• 기사 모바일 1단계 (Read & Click)</li>
+            <li>• 월간 정산 및 3.3% 급여 자동 산출</li>
+            <li>• 상위 기능 자물쇠 노출 (업그레이드 유도)</li>
+          </ul>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-emerald-400 font-bold">✅ 현재 100% 개발 완료</div>
+      </div>
+
+      <div class="bg-gradient-to-b from-blue-950/90 to-slate-900 border-2 border-blue-500 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-extrabold text-blue-300">PRO 티어 (주력 상품)</span>
+            <span class="text-lg font-black text-cyan-300">월 15~20만 원</span>
+          </div>
+          <h3 class="text-xl font-bold text-white mt-2">양방향 정산 & 사무 자동화팩</h3>
+          <ul class="mt-4 space-y-2 text-xs text-slate-200">
+            <li>• <strong>기사 2단계 (영수증 사진 업로드 & 승인)</strong></li>
+            <li>• 전자 견적서 / 배차확인서 자동 발행</li>
+            <li>• 거래처 미수금 관리 & 법정 운행일지 추출</li>
+            <li>• RBAC 직책별 권한 분리</li>
+          </ul>
+        </div>
+        <div class="mt-4 pt-3 border-t border-blue-800/60 text-[11px] text-cyan-300 font-bold">⚡ 핵심 정산 엔진 개발 완료</div>
+      </div>
+
+      <div class="bg-slate-900 border border-indigo-500/50 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-extrabold text-indigo-300">ENTERPRISE 티어</span>
+            <span class="text-lg font-black text-white">월 40~50만 원+</span>
+          </div>
+          <h3 class="text-xl font-bold text-white mt-2">실시간 LBS 관제 & 화이트라벨</h3>
+          <ul class="mt-4 space-y-2 text-xs text-slate-300">
+            <li>• <strong>웹 LBS 실시간 버스 관제 & 지오펜싱</strong></li>
+            <li>• 카카오 알림톡(Zero-UI) 무제한 자동화</li>
+            <li>• 대형 운수사 전용 커스텀 도메인/로고</li>
+            <li>• 다중 테넌트(Multi-tenant) 독립 환경</li>
+          </ul>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-indigo-400 font-bold">🚀 고부가가치 프리미엄 라인업</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800 text-xs">
+      <div class="bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-800">
+        <strong class="text-cyan-400">GTM Phase 1 (레퍼런스 증명):</strong> 가족 기업 현장 100% 안착 및 "주 20시간 절감" 실증 데이터 확보
+      </div>
+      <div class="bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-800">
+        <strong class="text-cyan-400">GTM Phase 2 (장벽 제거):</strong> 타 운수사 기존 엑셀 배차표 무료 마이그레이션 프로모션
+      </div>
+      <div class="bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-800">
+        <strong class="text-cyan-400">GTM Phase 3 (조합 공략):</strong> 지역 전세버스 조합 대상 '지오펜스 관제 + 고연령 친화 UI' 시연 영업
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 9: 유휴 차량 공유 네트워크 (Marketplace) ================= -->
+  <section class="slide bg-[#081223]" data-note="여기에 더해 타 여행사 간 빈 차(유휴 차량)를 서로 연결해주고 건당 중개 수수료를 받는 마켓플레이스 모델입니다. 이미 우리 차량 관리 화면에 45인승 일반, 28인승 우등, 연식, 타사 공유 노출 스위치까지 DB 설계가 다 들어가 있습니다.">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">08. B2B Idle Fleet Sharing Marketplace</span>
+      <h2 class="text-4xl font-black text-white mt-2">플랫폼 확장: 타 여행사 간 유휴 차량 공유 네트워크</h2>
+    </div>
+
+    <div class="grid grid-cols-2 gap-7 my-auto">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold">
+            기반 DB 구축 완료 (/admin/vehicles)
+          </span>
+          <span class="text-xs font-bold text-slate-400">신뢰 기반 스펙 표준화</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">차량 제원 정밀 관리 & 실시간 빈 차 매칭</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          타사 차량 중개 시 가장 중요한 신뢰도를 확보하기 위해, 이미 우리 ERP의 차량 관리 DB에 아래 상세 스펙이 표준화되어 구현되어 있습니다:
+        </p>
+        <ul class="space-y-2 text-sm text-slate-200">
+          <li>✔ <strong>정밀 인승 등급</strong>: 45인승 일반, 28인승 우등, 31인승 럭셔리, 25인승 중형 등</li>
+          <li>✔ <strong>상세 옵션 및 연식</strong>: 제조연도, 노래방·냉장고·USB·와이파이 등 편의사양 JSON DB화</li>
+          <li>✔ <strong>마켓플레이스 노출 스위치</strong>: <code>isMarketplaceVisible</code> 및 일일 대여 기준 단가 설정 완료</li>
+        </ul>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-extrabold">
+            수익 모델 다각화
+          </span>
+          <span class="text-xs font-bold text-slate-400">SaaS 구독료 + 중개 수수료</span>
+        </div>
+        <h3 class="text-2xl font-black text-white">폐쇄형 얼라이언스 ➔ 전국 전세버스 마켓플레이스</h3>
+        <ul class="space-y-3 text-sm text-slate-300 leading-relaxed">
+          <li>
+            <strong class="text-white block">1단계: 신뢰 기반 지역 얼라이언스 (Closed Group)</strong>
+            상호 신뢰하는 주변 친분 여행사 5~10곳과 그룹을 맺어, ERP 스케줄상 비어있는 유휴 차량을 실시간 공유하고 성수기 긴급 배차를 상호 해결합니다.
+          </li>
+          <li>
+            <strong class="text-white block">2단계: 건당 중개 수수료 (Transaction Fee) 창출</strong>
+            월 고정 SaaS 구독료 수익에 더해, 타사 유휴 차량 긴급 배차 매칭 성공 시 <strong>건당 중개 수수료</strong>를 수취하는 플랫폼 비즈니스로 확장합니다.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between border-t border-slate-800 pt-4">
+      <span class="text-sm text-slate-400">단순 관리 프로그램(ERP)을 넘어 전세버스 업계의 '배차 중개 거래소'로 진화</span>
+      <a href="/admin/vehicles" target="_blank" class="no-print px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+        🚀 구축된 차량 제원 & 마켓 노출 관리 화면 보기 ↗
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 10: 결론 및 라이브 시연 ================= -->
+  <section class="slide bg-gradient-to-br from-[#061021] via-[#0A1931] to-[#08203E]" data-note="이제 말로만 설명드리는 것보다 실제 작동하는 화면을 직접 보여드리겠습니다. 로그인부터 대시보드 알림 배지, 기사님 휴대폰 화면, 영수증 확대 승인까지 바로 시연해 보겠습니다!">
+    <div>
+      <span class="text-cyan-400 font-extrabold text-sm tracking-widest uppercase">09. Conclusion & Live Demo</span>
+      <h2 class="text-4xl font-black text-white mt-2">도입 기대 효과 및 실시간 시스템 시연</h2>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6 my-auto">
+      <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 text-center space-y-3">
+        <div class="text-5xl font-black text-cyan-400">주 20시간↓</div>
+        <div class="text-xl font-bold text-white">배차·영수증·월말 정산 시간 단축</div>
+        <p class="text-sm text-slate-300">수기 엑셀 입력과 종이 영수증 대조 업무를 제거하여 핵심 영업과 고객 관리에 집중</p>
+      </div>
+
+      <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 text-center space-y-3">
+        <div class="text-5xl font-black text-emerald-400">0건</div>
+        <div class="text-xl font-bold text-white">영수증 분실 및 정산 금액 누락</div>
+        <p class="text-sm text-slate-300">모바일 사진 즉시 전송 및 노선 마스터 자동 단가 매칭으로 정산 오차 원천 차단</p>
+      </div>
+
+      <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 text-center space-y-3">
+        <div class="text-5xl font-black text-blue-400">New Biz</div>
+        <div class="text-xl font-bold text-white">B2B SaaS 구독 & 차량 중개 수익</div>
+        <p class="text-sm text-slate-300">자사 현장 검증 완료 후 전국 운수사 대상 월 구독료 및 유휴 차량 중개 수수료 창출</p>
+      </div>
+    </div>
+
+    <div class="bg-slate-900/90 border border-cyan-500/40 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider">LIVE DEMONSTRATION</div>
+        <div class="text-xl font-black text-white mt-0.5">지금 바로 SF Mobility 실서버 시연을 시작합니다</div>
+      </div>
+      <div class="no-print flex flex-wrap items-center gap-2">
+        <a href="/login" target="_blank" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-extrabold shadow-lg shadow-cyan-500/25 transition">
+          1. 로그인 ↗
+        </a>
+        <a href="/" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 text-xs font-bold transition">
+          2. 통합 대시보드 (배지) ↗
+        </a>
+        <a href="/admin/drivers" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 text-xs font-bold transition">
+          3. 기사 모바일 뷰 ↗
+        </a>
+        <a href="/admin/settlements" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 text-xs font-bold transition">
+          4. 영수증 검토·승인 ↗
+        </a>
+        <a href="/settlement" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 text-xs font-bold transition">
+          5. 월간 정산·엑셀 ↗
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 하단 발표 대본(Speaker Notes) 자막 바 -->
+  <div id="speaker-notes" class="no-print fixed bottom-14 left-1/2 -translate-x-1/2 w-[90vw] max-w-5xl bg-amber-950/95 border border-amber-500/50 text-amber-100 px-6 py-3.5 rounded-2xl shadow-2xl text-sm font-medium leading-relaxed z-40">
+    <span class="text-amber-400 font-extrabold mr-2">🗣️ [발표 멘트 가이드]</span>
+    <span id="note-text"></span>
+  </div>
+
+  <!-- 하단 슬라이드 네비게이션 컨트롤 바 -->
+  <div class="no-print fixed bottom-0 left-0 right-0 h-12 bg-slate-950/90 border-t border-slate-800 px-6 flex items-center justify-between z-50 text-xs text-slate-400">
+    <div class="flex items-center gap-2">
+      <span class="font-extrabold text-white">SF Mobility</span>
+      <span>Master Plan & Live Demo Deck</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="prevSlide()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer">← 이전</button>
+      <span id="slide-counter" class="font-mono font-bold text-cyan-400">1 / 9</span>
+      <button onclick="nextSlide()" class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold cursor-pointer">다음 →</button>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('slide-counter');
+    const noteBox = document.getElementById('speaker-notes');
+    const noteText = document.getElementById('note-text');
+    let current = 0;
+
+    function updateSlide(index) {
+      slides.forEach((s, i) => s.classList.toggle('active', i === index));
+      counter.textContent = `${index + 1} / ${slides.length}`;
+      noteText.textContent = slides[index].getAttribute('data-note') || '';
+    }
+
+    function nextSlide() {
+      if (current < slides.length - 1) {
+        current++;
+        updateSlide(current);
+      }
+    }
+
+    function prevSlide() {
+      if (current > 0) {
+        current--;
+        updateSlide(current);
+      }
+    }
+
+    function toggleNotes() {
+      noteBox.classList.toggle('hidden');
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'n') {
+        toggleNotes();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullScreen();
+      }
+    });
+
+    updateSlide(0);
+  </script>
+</body>
+</html>
