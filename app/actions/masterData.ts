@@ -145,10 +145,11 @@ export async function createRouteMaster(rawInput: RouteMasterInput): Promise<Act
 
 /**
  * 요금/급여 산정 기준 규칙 목록 조회 (GET)
+ * - 최초 조회 시 등록된 단가 기준이 0건이면 표준 전세버스 차종별 단가 기준을 자동 시딩합니다.
  */
 export async function getPricingRules(): Promise<ActionResponse<any[]>> {
   try {
-    const rules = await prisma.pricingRule.findMany({
+    let rules = await prisma.pricingRule.findMany({
       include: {
         company: {
           select: {
@@ -158,10 +159,64 @@ export async function getPricingRules(): Promise<ActionResponse<any[]>> {
         },
       },
       orderBy: [
+        { isActive: "desc" },
         { startDate: "desc" },
         { capacityType: "asc" },
       ],
     });
+
+    if (rules.length === 0) {
+      const companyId = await getDefaultCompanyId();
+      const defaultStartDate = new Date("2026-01-01T00:00:00.000Z");
+
+      await prisma.pricingRule.createMany({
+        data: [
+          {
+            companyId,
+            startDate: defaultStartDate,
+            capacityType: CapacityType.STANDARD_45,
+            baseRate: 70000,
+            extraFuelCostPerKm: 500,
+            weekendSurgeRate: 1.1,
+            isActive: true,
+          },
+          {
+            companyId,
+            startDate: defaultStartDate,
+            capacityType: CapacityType.PREMIUM_28,
+            baseRate: 80000,
+            extraFuelCostPerKm: 600,
+            weekendSurgeRate: 1.15,
+            isActive: true,
+          },
+          {
+            companyId,
+            startDate: defaultStartDate,
+            capacityType: CapacityType.COMPACT_25,
+            baseRate: 60000,
+            extraFuelCostPerKm: 400,
+            weekendSurgeRate: 1.1,
+            isActive: true,
+          },
+        ],
+      });
+
+      rules = await prisma.pricingRule.findMany({
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: [
+          { isActive: "desc" },
+          { startDate: "desc" },
+          { capacityType: "asc" },
+        ],
+      });
+    }
 
     return {
       success: true,
@@ -177,7 +232,7 @@ export async function getPricingRules(): Promise<ActionResponse<any[]>> {
 }
 
 /**
- * 신규 요금/급여 산정 기준 규칙 등록 (POST)
+ * 신규 요금/급여 산정 기준 규칙 등록 또는 동일 차종 단가 갱신 (POST)
  */
 export async function createPricingRule(rawInput: PricingRuleInput): Promise<ActionResponse> {
   try {
@@ -202,7 +257,10 @@ export async function createPricingRule(rawInput: PricingRuleInput): Promise<Act
       },
     });
 
+    revalidatePath("/admin/master-data/route");
     revalidatePath("/admin/master-data/pricing");
+    revalidatePath("/settlement");
+    revalidatePath("/driver/[driverId]", "page");
 
     return {
       success: true,
@@ -213,6 +271,33 @@ export async function createPricingRule(rawInput: PricingRuleInput): Promise<Act
     return {
       success: false,
       error: err.message || "단가 기준 등록에 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * 단가 기준 삭제 액션
+ */
+export async function deletePricingRule(ruleId: string): Promise<ActionResponse> {
+  try {
+    if (!ruleId) {
+      return { success: false, error: "유효하지 않은 단가 기준 ID입니다." };
+    }
+
+    await prisma.pricingRule.delete({
+      where: { id: ruleId },
+    });
+
+    revalidatePath("/admin/master-data/route");
+    revalidatePath("/settlement");
+    revalidatePath("/driver/[driverId]", "page");
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("[deletePricingRule Error]:", err);
+    return {
+      success: false,
+      error: "단가 기준 삭제 중 오류가 발생했습니다.",
     };
   }
 }

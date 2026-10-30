@@ -3,6 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approvePendingSettlement } from "@/app/actions/admin";
+import { calculateDispatchPayout } from "@/lib/payroll-calculator";
 
 export interface PendingSettlementItemProps {
   dispatchId: string;
@@ -166,6 +167,14 @@ export default function SettlementApprovalModal({
 
   const totalExtraExpense =
     (parseInt(tollFeeInput, 10) || 0) + (parseInt(parkingFeeInput, 10) || 0);
+
+  const estimatedTotalPayout = calculateDispatchPayout({
+    status: "COMPLETED",
+    actualDistance: parseFloat(distanceInput) || 0,
+    actualTollFee: parseInt(tollFeeInput, 10) || 0,
+    parkingFee: parseInt(parkingFeeInput, 10) || 0,
+    date: item.date,
+  });
 
   return (
     <>
@@ -364,14 +373,24 @@ export default function SettlementApprovalModal({
                 </div>
               </div>
 
-              {/* 합산 실비 안내 */}
-              <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-600">
-                  추가 인정 실비 합계 (톨비 + 주차비)
-                </span>
-                <span className="text-sm font-black text-slate-900">
-                  +{totalExtraExpense.toLocaleString("ko-KR")}원
-                </span>
+              {/* 합산 실비 및 단가 기준표 연동 최종 수당 안내 */}
+              <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600">
+                    추가 인정 실비 합계 (톨비 + 주차비)
+                  </span>
+                  <span className="text-sm font-bold text-slate-800">
+                    +{totalExtraExpense.toLocaleString("ko-KR")}원
+                  </span>
+                </div>
+                <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                  <span className="font-bold text-blue-700">
+                    💳 단가 기준표 연동 예상 기사 지급 총액 (거리수당 + 실비)
+                  </span>
+                  <span className="text-base font-black text-emerald-600">
+                    +{estimatedTotalPayout.toLocaleString("ko-KR")}원
+                  </span>
+                </div>
               </div>
 
               {errorMessage && (

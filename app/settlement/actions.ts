@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { calculateDispatchPayout } from "@/lib/payroll-calculator";
 
 export interface MonthlySettlementItem {
   routeId: string;
@@ -55,26 +56,50 @@ export async function getMonthlySettlement(yearMonth: string): Promise<MonthlySe
     // 다음 달의 시작일 (UTC 기준 1일 00:00:00)
     const endDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
 
-    // 해당 월에 배차 기록이 있는 노선과 배차 목록 조회 (승인된 통행료/주차비 실비 포함)
-    const routes = await prisma.route.findMany({
-      include: {
-        dispatches: {
-          where: {
-            date: {
-              gte: startDate,
-              lt: endDate,
+    // 해당 월에 배차 기록이 있는 노선과 배차 목록, 그리고 차종별 단가 기준표(PricingRule) 병렬 조회
+    const [routes, pricingRules] = await Promise.all([
+      prisma.route.findMany({
+        include: {
+          dispatches: {
+            where: {
+              date: {
+                gte: startDate,
+                lt: endDate,
+              },
+            },
+            select: {
+              id: true,
+              date: true,
+              status: true,
+              actualDistance: true,
+              actualTollFee: true,
+              parkingFee: true,
+              routeMaster: {
+                select: {
+                  estimatedDistance: true,
+                  defaultTollFee: true,
+                },
+              },
+              assignments: {
+                take: 1,
+                select: {
+                  vehicle: {
+                    select: {
+                      capacityType: true,
+                    },
+                  },
+                },
+              },
             },
           },
-          select: {
-            id: true,
-            status: true,
-            actualTollFee: true,
-            parkingFee: true,
-          },
         },
-      },
-      orderBy: [{ clientName: "asc" }, { name: "asc" }],
-    });
+        orderBy: [{ clientName: "asc" }, { name: "asc" }],
+      }),
+      prisma.pricingRule.findMany({
+        where: { isActive: true },
+        orderBy: { startDate: "desc" },
+      }),
+    ]);
 
     // 해당 월에 운행된 노선만 집계 (운행 횟수 > 0)
     const settlementData: MonthlySettlementItem[] = routes
@@ -85,15 +110,25 @@ export async function getMonthlySettlement(yearMonth: string): Promise<MonthlySe
         const payoutPrice = route.payoutPrice; // 지급 단가
         const totalBillingAmount = operationCount * billingPrice; // 청구 금액 총액
 
-        // 승인 완료(COMPLETED)된 배차의 추가 인정 실비(톨게이트비 + 주차비) 합산
-        const extraReimbursedExpenses = route.dispatches.reduce((sum, d) => {
-          if (d.status === "COMPLETED") {
-            return sum + (d.actualTollFee ?? 0) + (d.parkingFee ?? 0);
-          }
-          return sum;
+        // 각 배차 건별 지급액 합산 (고정 단가 또는 PricingRule 거리 연동 수당 + 승인 실비)
+        const totalPayoutAmount = route.dispatches.reduce((sum, d) => {
+          return (
+            sum +
+            calculateDispatchPayout({
+              routePayoutPrice: route.payoutPrice,
+              status: d.status,
+              actualDistance: d.actualDistance,
+              estimatedDistance: d.routeMaster?.estimatedDistance,
+              actualTollFee: d.actualTollFee,
+              defaultTollFee: d.routeMaster?.defaultTollFee,
+              parkingFee: d.parkingFee,
+              date: d.date,
+              capacityType: d.assignments[0]?.vehicle?.capacityType,
+              pricingRules,
+            })
+          );
         }, 0);
 
-        const totalPayoutAmount = operationCount * payoutPrice + extraReimbursedExpenses; // 지급 금액 총액 (기본 지급액 + 승인 실비)
         const operatingMargin = totalBillingAmount - totalPayoutAmount; // 영업 마진
 
         return {

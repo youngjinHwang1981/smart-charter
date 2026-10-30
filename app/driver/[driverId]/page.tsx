@@ -1,6 +1,9 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
-import { calculatePayroll } from "@/lib/payroll-calculator";
+import {
+  calculatePayroll,
+  calculateDispatchPayout,
+} from "@/lib/payroll-calculator";
 import DriverMobileView, {
   SerializedDriverInfo,
   SerializedScheduleItem,
@@ -78,8 +81,8 @@ export default async function DriverPortalPage({
   const nextMonth = month === 12 ? 1 : month + 1;
   const endDate = new Date(Date.UTC(nextYear, nextMonth - 1, 1, 0, 0, 0));
 
-  // 3. 해당 기사의 당월 배차 및 과거 운행 월 목록을 Promise.all로 병렬 조회
-  const [assignments, pastAssignments] = await Promise.all([
+  // 3. 해당 기사의 당월 배차, 과거 운행 월 목록, 차종별 단가 기준표(PricingRule)를 Promise.all로 병렬 조회
+  const [assignments, pastAssignments, pricingRules] = await Promise.all([
     prisma.dispatchAssignment.findMany({
       where: {
         driverId: driver.id,
@@ -93,7 +96,7 @@ export default async function DriverPortalPage({
       select: {
         id: true,
         status: true,
-        vehicle: { select: { plateNumber: true } },
+        vehicle: { select: { plateNumber: true, capacityType: true } },
         dispatch: {
           select: {
             id: true,
@@ -143,6 +146,10 @@ export default async function DriverPortalPage({
       select: { dispatch: { select: { date: true } } },
       take: 200,
     }),
+    prisma.pricingRule.findMany({
+      where: { isActive: true },
+      orderBy: { startDate: "desc" },
+    }),
   ]);
 
   const monthSet = new Set<string>();
@@ -154,14 +161,23 @@ export default async function DriverPortalPage({
   });
   const availableMonths = Array.from(monthSet).sort().reverse();
 
-  // 5. 급여 사전 계산 (payroll-calculator 재사용 + 승인 완료된 실비 합산)
+  // 5. 급여 사전 계산 (단가 기준표 PricingRule + 주행거리 + 주말할증 + 승인 실비 자동 연동)
   const grossPay = assignments.reduce((sum, a) => {
-    const basePayout = a.dispatch?.route?.payoutPrice || 0;
-    const isApproved = a.dispatch?.status === "COMPLETED";
-    const approvedExpenses = isApproved
-      ? (a.dispatch?.actualTollFee || 0) + (a.dispatch?.parkingFee || 0)
-      : 0;
-    return sum + basePayout + approvedExpenses;
+    const resolvedStatus =
+      a.dispatch?.status !== "PENDING" ? a.dispatch?.status : a.status;
+    const itemPayout = calculateDispatchPayout({
+      routePayoutPrice: a.dispatch?.route?.payoutPrice,
+      status: resolvedStatus,
+      actualDistance: a.dispatch?.actualDistance,
+      estimatedDistance: a.dispatch?.routeMaster?.estimatedDistance,
+      actualTollFee: a.dispatch?.actualTollFee,
+      defaultTollFee: a.dispatch?.routeMaster?.defaultTollFee,
+      parkingFee: a.dispatch?.parkingFee,
+      date: a.dispatch?.date,
+      capacityType: a.vehicle?.capacityType,
+      pricingRules,
+    });
+    return sum + itemPayout;
   }, 0);
   const payrollResult = calculatePayroll(grossPay);
 
@@ -213,11 +229,18 @@ export default async function DriverPortalPage({
       coDriver,
       type: (resolvedRouteType === "FIXED_ROUTE" ? "FIXED" : "NORMAL") as "FIXED" | "NORMAL",
       routeType: resolvedRouteType,
-      payoutPrice:
-        (a.dispatch?.route?.payoutPrice || 0) +
-        (a.dispatch?.status === "COMPLETED"
-          ? (a.dispatch?.actualTollFee || 0) + (a.dispatch?.parkingFee || 0)
-          : 0),
+      payoutPrice: calculateDispatchPayout({
+        routePayoutPrice: a.dispatch?.route?.payoutPrice,
+        status: a.dispatch?.status !== "PENDING" ? a.dispatch.status : a.status,
+        actualDistance: a.dispatch?.actualDistance,
+        estimatedDistance: a.dispatch?.routeMaster?.estimatedDistance,
+        actualTollFee: a.dispatch?.actualTollFee,
+        defaultTollFee: a.dispatch?.routeMaster?.defaultTollFee,
+        parkingFee: a.dispatch?.parkingFee,
+        date: a.dispatch?.date,
+        capacityType: a.vehicle?.capacityType,
+        pricingRules,
+      }),
       status: a.dispatch?.status !== "PENDING" ? a.dispatch.status : a.status,
       estimatedDistance: a.dispatch?.routeMaster?.estimatedDistance ?? null,
       defaultTollFee: a.dispatch?.routeMaster?.defaultTollFee ?? null,

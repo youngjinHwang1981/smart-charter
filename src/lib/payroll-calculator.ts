@@ -181,3 +181,125 @@ export function calculatePayrollByEmploymentType(
 
   return calculatePayroll(grossPayout, config);
 }
+
+export interface PricingRuleItem {
+  capacityType: string;
+  baseRate: number;
+  extraFuelCostPerKm: number;
+  weekendSurgeRate: number;
+  isActive?: boolean;
+}
+
+export interface DispatchPayoutInput {
+  routePayoutPrice?: number | null;
+  status?: string | null;
+  actualDistance?: number | null;
+  estimatedDistance?: number | null;
+  actualTollFee?: number | null;
+  defaultTollFee?: number | null;
+  parkingFee?: number | null;
+  date?: Date | string | null;
+  capacityType?: string | null;
+  pricingRules?: PricingRuleItem[];
+}
+
+export const DEFAULT_PRICING_RULES: PricingRuleItem[] = [
+  {
+    capacityType: "STANDARD_45",
+    baseRate: 70000,
+    extraFuelCostPerKm: 500,
+    weekendSurgeRate: 1.1,
+    isActive: true,
+  },
+  {
+    capacityType: "PREMIUM_28",
+    baseRate: 80000,
+    extraFuelCostPerKm: 600,
+    weekendSurgeRate: 1.15,
+    isActive: true,
+  },
+  {
+    capacityType: "COMPACT_25",
+    baseRate: 60000,
+    extraFuelCostPerKm: 400,
+    weekendSurgeRate: 1.1,
+    isActive: true,
+  },
+];
+
+/**
+ * 배차 1건의 기사 지급 수당(운행수당 + 거리단가 + 주말할증 + 승인 실비)을 자동 산출합니다.
+ * - 노선에 고정 지급단가(routePayoutPrice > 0)가 있으면 해당 단가를 우선 적용합니다.
+ * - 고정 지급단가가 0원인 일반 대절/신규 노선은 PricingRule(단가 기준표)의
+ *   [차종별 기본단가 + (주행거리 × km당 단가)] × 주말할증 + 실비(톨비·주차비)로 자동 계산합니다.
+ */
+export function calculateDispatchPayout(input: DispatchPayoutInput): number {
+  const baseRoutePayout = input.routePayoutPrice ?? 0;
+  const status = input.status ?? "PENDING";
+  const distanceKm =
+    input.actualDistance && input.actualDistance > 0
+      ? input.actualDistance
+      : input.estimatedDistance && input.estimatedDistance > 0
+      ? input.estimatedDistance
+      : 0;
+
+  // 실비(통행료 + 주차비)
+  const toll =
+    status === "COMPLETED"
+      ? input.actualTollFee ?? input.defaultTollFee ?? 0
+      : status === "PENDING_SETTLEMENT"
+      ? input.actualTollFee ?? 0
+      : 0;
+  const parking =
+    status === "COMPLETED" || status === "PENDING_SETTLEMENT"
+      ? input.parkingFee ?? 0
+      : 0;
+  const extraExpenses = Math.max(0, toll + parking);
+
+  // 1) 노선에 고정 지급 단가가 설정된 경우
+  if (baseRoutePayout > 0) {
+    return baseRoutePayout + extraExpenses;
+  }
+
+  // 2) 고정 지급 단가가 0원인 경우: 운행 완료/정산 대기 상태이거나 주행거리가 입력된 경우 단가 기준표 적용
+  const isSettledOrSubmitted =
+    status === "COMPLETED" ||
+    status === "PENDING_SETTLEMENT" ||
+    distanceKm > 0;
+
+  if (!isSettledOrSubmitted) {
+    return 0;
+  }
+
+  const rules =
+    input.pricingRules && input.pricingRules.length > 0
+      ? input.pricingRules.filter((r) => r.isActive !== false)
+      : DEFAULT_PRICING_RULES;
+
+  const targetCapacity = input.capacityType || "STANDARD_45";
+  const matchedRule =
+    rules.find((r) => r.capacityType === targetCapacity) ||
+    rules.find((r) => r.capacityType === "STANDARD_45") ||
+    rules[0] ||
+    DEFAULT_PRICING_RULES[0];
+
+  // 주말(토=6, 일=0) 여부 판별
+  let isWeekend = false;
+  if (input.date) {
+    const d = typeof input.date === "string" ? new Date(input.date) : input.date;
+    if (!isNaN(d.getTime())) {
+      const day = d.getUTCDay();
+      isWeekend = day === 0 || day === 6;
+    }
+  }
+
+  const rawAllowance =
+    matchedRule.baseRate + distanceKm * matchedRule.extraFuelCostPerKm;
+  const surgeMultiplier = isWeekend ? matchedRule.weekendSurgeRate || 1.0 : 1.0;
+
+  // 100원 단위 반올림
+  const calculatedAllowance =
+    Math.round((rawAllowance * surgeMultiplier) / 100) * 100;
+
+  return calculatedAllowance + extraExpenses;
+}
