@@ -1,15 +1,50 @@
 import React from "react";
+import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import SettlementApprovalModal, {
   type PendingSettlementItemProps,
-  parseReceiptImageArray,
 } from "./SettlementApprovalModal";
+
+/**
+ * 서버 컴포넌트 안전한 영수증 이미지 URL 배열 파서
+ * ("use client" 모듈의 함수를 서버 컴포넌트에서 직접 호출하면 RSC 런타임 에러가 발생하므로 별도 분리)
+ */
+function parseReceiptImageArrayServer(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (u): u is string =>
+            typeof u === "string" &&
+            (u.startsWith("data:image/") ||
+              u.startsWith("http") ||
+              u.startsWith("/"))
+        );
+      }
+    } catch {
+      // ignore JSON parse error
+    }
+  }
+  if (
+    trimmed.startsWith("data:image/") ||
+    trimmed.startsWith("http") ||
+    trimmed.startsWith("/")
+  ) {
+    return [trimmed];
+  }
+  return [];
+}
 
 /**
  * 미정산 내역(PENDING_SETTLEMENT) 조회 및 승인 관리 서버 컴포넌트
  * 경로: app/admin/settlements/PendingSettlementList.tsx
  */
 export default async function PendingSettlementList() {
+  await connection();
+
   const pendingDispatches = await prisma.dispatch.findMany({
     where: {
       status: "PENDING_SETTLEMENT",
@@ -137,7 +172,7 @@ export default async function PendingSettlementList() {
                   </td>
                   <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     {(() => {
-                      const imgs = parseReceiptImageArray(item.receiptImageUrl);
+                      const imgs = parseReceiptImageArrayServer(item.receiptImageUrl);
                       if (imgs.length > 0) {
                         return (
                           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-bold">
