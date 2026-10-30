@@ -100,9 +100,11 @@ export default async function DriverPortalPage({
             date: true,
             type: true,
             routeType: true,
+            routeMasterId: true,
             status: true,
             actualDistance: true,
             actualTollFee: true,
+            parkingFee: true,
             receiptImageUrl: true,
             routeMaster: {
               select: {
@@ -152,11 +154,15 @@ export default async function DriverPortalPage({
   });
   const availableMonths = Array.from(monthSet).sort().reverse();
 
-  // 5. 급여 사전 계산 (payroll-calculator 재사용)
-  const grossPay = assignments.reduce(
-    (sum, a) => sum + (a.dispatch?.route?.payoutPrice || 0),
-    0
-  );
+  // 5. 급여 사전 계산 (payroll-calculator 재사용 + 승인 완료된 실비 합산)
+  const grossPay = assignments.reduce((sum, a) => {
+    const basePayout = a.dispatch?.route?.payoutPrice || 0;
+    const isApproved = a.dispatch?.status === "COMPLETED";
+    const approvedExpenses = isApproved
+      ? (a.dispatch?.actualTollFee || 0) + (a.dispatch?.parkingFee || 0)
+      : 0;
+    return sum + basePayout + approvedExpenses;
+  }, 0);
   const payrollResult = calculatePayroll(grossPay);
 
   // 6. 클라이언트 컴포넌트 렌더링에 필요한 최소한의 직렬화 데이터 가공
@@ -207,7 +213,11 @@ export default async function DriverPortalPage({
       coDriver,
       type: (resolvedRouteType === "FIXED_ROUTE" ? "FIXED" : "NORMAL") as "FIXED" | "NORMAL",
       routeType: resolvedRouteType,
-      payoutPrice: a.dispatch?.route?.payoutPrice || 0,
+      payoutPrice:
+        (a.dispatch?.route?.payoutPrice || 0) +
+        (a.dispatch?.status === "COMPLETED"
+          ? (a.dispatch?.actualTollFee || 0) + (a.dispatch?.parkingFee || 0)
+          : 0),
       status: a.dispatch?.status !== "PENDING" ? a.dispatch.status : a.status,
       estimatedDistance: a.dispatch?.routeMaster?.estimatedDistance ?? null,
       defaultTollFee: a.dispatch?.routeMaster?.defaultTollFee ?? null,

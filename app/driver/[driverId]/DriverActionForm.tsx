@@ -6,6 +6,7 @@ import { completeDispatch } from "@/app/actions/driver";
 
 export interface DriverActionFormProps {
   dispatchId: string;
+  driverId?: string;
   routeType: "FIXED_ROUTE" | "CUSTOM_CHARTER" | string;
   status: string;
   estimatedDistance?: number | null;
@@ -88,6 +89,7 @@ async function compressImageToDataUrl(
 
 export default function DriverActionForm({
   dispatchId,
+  driverId,
   routeType,
   status: initialStatus,
   estimatedDistance = 0,
@@ -224,7 +226,7 @@ export default function DriverActionForm({
     setFeedbackMessage(null);
 
     startTransition(async () => {
-      const res = await completeDispatch(dispatchId);
+      const res = await completeDispatch(dispatchId, undefined, driverId);
       if (!res.success) {
         setErrorMessage(res.error || "자동 정산 처리 중 오류가 발생했습니다.");
         return;
@@ -260,10 +262,14 @@ export default function DriverActionForm({
           ? images[0]
           : JSON.stringify(images);
 
-      const res = await completeDispatch(dispatchId, {
-        actualDistance: parsedDistance > 0 ? parsedDistance : 0,
-        receiptImageUrl: serializedReceiptUrl,
-      });
+      const res = await completeDispatch(
+        dispatchId,
+        {
+          actualDistance: parsedDistance > 0 ? parsedDistance : 0,
+          receiptImageUrl: serializedReceiptUrl,
+        },
+        driverId
+      );
 
       if (!res.success) {
         setErrorMessage(res.error || "정산 내역 전송 중 오류가 발생했습니다.");

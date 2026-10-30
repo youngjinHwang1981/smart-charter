@@ -24,33 +24,13 @@ export const authOptions: NextAuthOptions = {
           where: { email: searchEmail },
         });
 
-        if (!user) {
-          throw new Error(`등록되지 않은 이메일입니다: ${searchEmail}`);
+        if (!user || !user.password) {
+          throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        // 2. 비밀번호 가져오기 (서버 미재시작 시 Prisma Client 메모리 캐시 누락 대비 원본 DB 조회)
-        let passwordHash = user.password;
-        if (!passwordHash) {
-          try {
-            const rawUsers: any = await prisma.$queryRawUnsafe(
-              "SELECT password FROM User WHERE email = ? LIMIT 1",
-              searchEmail
-            );
-            if (rawUsers && rawUsers.length > 0 && rawUsers[0].password) {
-              passwordHash = rawUsers[0].password;
-            }
-          } catch (rawErr) {
-            console.error("[Auth] 비밀번호 직접 쿼리 에러:", rawErr);
-          }
-        }
-
-        if (!passwordHash) {
-          throw new Error("비밀번호가 설정되지 않은 계정입니다.");
-        }
-
-        const isPasswordValid = await bcrypt.compare(searchPassword, passwordHash);
+        const isPasswordValid = await bcrypt.compare(searchPassword, user.password);
         if (!isPasswordValid) {
-          throw new Error("비밀번호가 일치하지 않습니다.");
+          throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
         return {

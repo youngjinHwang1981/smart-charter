@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/lib/auth";
 import { z } from "zod";
 
 // 배차 등록 입력 스키마
@@ -124,6 +126,12 @@ export async function getAvailableDriversAndVehicles(): Promise<
  */
 export async function createDispatch(rawInput: CreateDispatchInput): Promise<ActionResponse> {
   try {
+    const session = await getServerSession(authOptions);
+    const role = (session?.user as { role?: string } | undefined)?.role;
+    if (!session?.user || role !== "ADMIN") {
+      return { success: false, error: "관리자 권한이 필요합니다." };
+    }
+
     const parsed = createDispatchSchema.safeParse(rawInput);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message || "입력값이 올바르지 않습니다.";

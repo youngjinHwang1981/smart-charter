@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/lib/auth";
 
 // 1. DB에서 배차 데이터를 읽어와 AG Grid용 평면(Flat) 객체로 변환
 export async function getDispatchSchedule() {
@@ -51,6 +53,12 @@ export async function getDispatchSchedule() {
 // 2. 셀 편집 시 호출되는 업데이트 함수
 export async function updateDispatchRecord(routeId: string, dateField: string, newDriverName: string) {
   try {
+    const session = await getServerSession(authOptions);
+    const role = (session?.user as { role?: string } | undefined)?.role;
+    if (!session?.user || role !== "ADMIN") {
+      return { success: false, message: "관리자 권한이 필요합니다." };
+    }
+
     const targetDate = new Date(`${dateField}T00:00:00.000Z`);
     const nextDate = new Date(`${dateField}T23:59:59.999Z`);
 

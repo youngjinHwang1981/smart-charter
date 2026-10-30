@@ -322,6 +322,7 @@ export default function DriverMobileView({
                       {/* 투 트랙 운행 종료 및 자동/수동 정산 제어 폼 */}
                       <DriverActionForm
                         dispatchId={item.dispatchId}
+                        driverId={driver.id}
                         routeType={item.routeType}
                         status={item.status}
                         estimatedDistance={item.estimatedDistance}
@@ -421,6 +422,7 @@ export default function DriverMobileView({
                         {/* 투 트랙 운행 종료 및 정산 제어 폼 */}
                         <DriverActionForm
                           dispatchId={item.dispatchId}
+                          driverId={driver.id}
                           routeType={item.routeType}
                           status={item.status}
                           estimatedDistance={item.estimatedDistance}

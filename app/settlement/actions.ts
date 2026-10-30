@@ -55,7 +55,7 @@ export async function getMonthlySettlement(yearMonth: string): Promise<MonthlySe
     // 다음 달의 시작일 (UTC 기준 1일 00:00:00)
     const endDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
 
-    // 해당 월에 배차 기록이 있는 노선과 배차 목록 조회
+    // 해당 월에 배차 기록이 있는 노선과 배차 목록 조회 (승인된 통행료/주차비 실비 포함)
     const routes = await prisma.route.findMany({
       include: {
         dispatches: {
@@ -67,6 +67,9 @@ export async function getMonthlySettlement(yearMonth: string): Promise<MonthlySe
           },
           select: {
             id: true,
+            status: true,
+            actualTollFee: true,
+            parkingFee: true,
           },
         },
       },
@@ -81,7 +84,16 @@ export async function getMonthlySettlement(yearMonth: string): Promise<MonthlySe
         const billingPrice = route.billingPrice; // 청구 단가
         const payoutPrice = route.payoutPrice; // 지급 단가
         const totalBillingAmount = operationCount * billingPrice; // 청구 금액 총액
-        const totalPayoutAmount = operationCount * payoutPrice; // 지급 금액 총액
+
+        // 승인 완료(COMPLETED)된 배차의 추가 인정 실비(톨게이트비 + 주차비) 합산
+        const extraReimbursedExpenses = route.dispatches.reduce((sum, d) => {
+          if (d.status === "COMPLETED") {
+            return sum + (d.actualTollFee ?? 0) + (d.parkingFee ?? 0);
+          }
+          return sum;
+        }, 0);
+
+        const totalPayoutAmount = operationCount * payoutPrice + extraReimbursedExpenses; // 지급 금액 총액 (기본 지급액 + 승인 실비)
         const operatingMargin = totalBillingAmount - totalPayoutAmount; // 영업 마진
 
         return {
